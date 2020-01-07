@@ -1,0 +1,354 @@
+.nf
+Network Working Group                                             1/2 Lelite
+Request for Comments: 6969                                     Leclerc Robin
+Category: Standards Track                                      Mercier Robin
+                                                             Ducheix Quentin
+                                                                 Agez Nathan
+                                                               November 2019
+.ce
+BULLSHIT PROTOCOL (BSP)
+
+.ti 0
+Status of this Memo
+
+.fi
+.in 3
+This memo provides official specifications of the Bullshit Protocol (BSP).
+Distribution of this memo is unlimited.
+
+.ti 0
+Copyright Notice
+
+Copyright (C) The 1/2 Elite (2019).  All Rights Reserved.
+
+.ce
+1.  Introduction
+
+.fi
+.in 3
+The objectives of BSP are 1) to transmit ressources to a video game client in a simple way with Andianness handling, 2) to allow an effective muliplaying games through a client/server communication.
+
+.fi
+.in 3
+This paper assumes knowledge of the Transmission Control Protocol (TCP)[1] and the User Datagram Protocol (UDP)[2].
+
+.ti 3
+1.1  Motivation
+
+.fi
+.in 6
+Computer communication systems are playing an increasingly important role in military, government, and civilian environments. Echanging data between computers keeping integrety of datas is important. BSP is a connection and a connection less reliable protocol designed to share serialized packets between multiple clients and a server
+
+.ti 3
+1.2  Discussion
+
+.fi
+.in 6
+In this section, the history, the terminology, and the BSP model are discussed. The terms defined in this section are only those that have special significance in BSP. Some of the terminology is very specific to the BSP model, some readers may wish to turn to the section on the BSP model while reviewing the terminology.
+
+.ce
+2.  Overview
+
+.ti 3
+2.1  History
+
+.fi
+.in 6
+BSP is a brand new project, and the Request for Comments 6969 is
+the very first draft about it.
+
+.ti 3
+2.2  Terminology
+
+.ti 6
+server
+.fi
+.in 9
+A process is set of processes which perform the function of data transfer in cooperation with a client. The functions consist of a protocol interpreter and a data transfer process.
+
+.ti 6
+client
+.fi
+.in 9
+ A set of functions including a protocol interpreter, and a user interface which together perform the function of gaming in cooperation with one or more BP server and, possibly, another client.
+
+.ti 6
+graphic
+.fi
+.in 9
+ A set of functions to transmit graphics to Client
+
+.ti 6
+sound
+.fi
+.in 9
+ A set of functions to transmit sounds to Client
+
+.ti 3
+2.3  THE BSP MODEL
+
+.ti 6
+2.3.1 TCP Packets
+
+.fi
+.in 9
+The aim of the TCP part is to provide a way to send packets that don't accept any losses, it is a connection protocol.
+The authentification allow one action to the client : Sign in by sending his username.
+The game management allow to create, join, quit and delete a game.
+A client must sign in before performing any actions on a game.
+All resources are sent via TCP.
+
+.fi
+.in 9
+The PacketType indicate the type of action to trigger :
+.fi
+- 0 to CREATE a lobby.
+.fi
+- 1 to JOIN a lobby.
+.fi
+- 2 to LEAVE a lobdy.
+.fi
+- 4 to DELETE a lobby.
+.fi
+- 5 used for user Sign In.
+
+.fi
+- The username bytes indicates the username of the client.
+.fi
+- The roomId bytes indicates which lobby to join.
+.fi
+- The lobbies bytes indicates lobbies and number of clients inside them.
+.fi
+- The port bytes indicates port used for the UDP communication.
+
+.nf
++------------------+-----------------+--------------------+
+|                  |                 |                    |
+|       Size       |       Name      |    Description     |
+|                  |                 |                    |
++------------------+-----------------+--------------------+
+|     4 byte       |      type       |     Packet type    |
++------------------+-----------------+--------------------+
+|     byte[255]    |    username     |   Player username  |
++------------------+-----------------+--------------------+
+|     byte[255]    |     roomId      |   Lobby to join    |
++------------------+-----------------+--------------------+
+.ce
+Fig.1 - Structure ClientTCPPacket
+
+.nf
++------------------+-----------------+--------------------+
+|                  |                 |                    |
+|       Size       |       Name      |    Description     |
+|                  |                 |                    |
++------------------+-----------------+--------------------+
+|     4 byte       |      type       |     Packet type    |
++------------------+-----------------+--------------------+
+|    byte[1024]    |     lobbies     |   List of lobbies  |
++------------------+-----------------+--------------------+
+|     byte[255]    |      port       |    Port number     |
++------------------+-----------------+--------------------+
+.ce
+Fig.2 - Structure ServerTCPPacket
+
+.fi
+.in 9
+NONE command must takes one argument :
+An unsigned char which must contains the username of the client.
+NONE command also return list of lobbies to all connected users.
+
+JOIN games must takes one argument :
+An unsigned char which must contains the id of the lobby.
+
+LEAVE takes no argument :
+It must use the datastructure from the server.
+
+CREATE lobby must takes two arguments :
+An unsigned char which must contains the roomId.
+An unsigned char which must contains the number of clients.
+
+DELETE command lobby must takes two arguments :
+An unsigned char which must contains the roomId.
+An unsigned char which must contains the number of clients.
+
+.nf
++----------+-----------------+----------+-----------------+
+| roomName :  numberOfPlayer | roomName :  numberOfPlayer |
++----------+-----------------+----------+-----------------+
+.ce
+Fig.3 - LobbyList Datagram
+
+START command takes one argument :
+An unsigned integer which contains the id of the game.
+
+.nf
++-----------------+--------------------------------+
+|                 |                                |
+|     Command     |       Format                   |
+|                 |                                |
++-----------------+--------------------------------+
+|      NONE       | username : uint8               |
++-----------------+--------------------------------+
+|      JOIN       | username : uint8               |
+|                 | roomId: uint8                  |
++-----------------+--------------------------------+
+|      LEAVE      |                                |
++-----------------+--------------------------------+
+|     CREATE      | username : uint8               |
++-----------------+--------------------------------+
+|     DELETE      |                                |
++-----------------+--------------------------------+
+|      START      | port : uint8                   |
++-----------------+--------------------------------+
+.ce
+Fig.4 - Data formating
+
+.ti 6
+2.3.2 UDP Packets
+
+.fi
+.in 9
+UDP protocol is used to handle every in game events.
+
+.fi
+.in 9
+We use UDP protocol to send entities and inputs to all players in a lobby.
+As we know, UDP is connection less protocol so we can accept to drop some packets.
+Udp will serve here to make our cient game update while playing. 
+
+
+.fi
+.in 9
+The client and server communicate with different packet type.
+The GameTypePacket indicate the type of action to trigger :
+.fi
+- 0 to SPAWN a user.
+.fi
+- 1 ENTITY_SPAWN to make an entity spawn.
+.fi
+- 2 ENTITY_DESTROY to destroy an entity.
+.fi
+- 4 PLAYER_MOVE to tell the player where to move.
+.fi
+- 5 PLAYER_FIRE to make the player fire shoot bullets.
+
+.in 12
+.nf
++------------------+-----------------+--------------------+
+|                  |                 |                    |
+|       Size       |       Name      |    Description     |
+|                  |                 |                    |
++------------------+-----------------+--------------------+
+|     4 byte       |      pos_x      | Position of Entity |
++------------------+-----------------+--------------------+
+|     4 byte       |      pos_y      | Position of Entity |
++------------------+-----------------+--------------------+
+|     4 byte       |      dir_x      |  Direction Entity  |
++------------------+-----------------+--------------------+
+|     4 byte       |      dir_y      |  Direction Entity  |
++------------------+-----------------+--------------------+
+|     byte[255]    |     username    |      Username      |
++------------------+-----------------+--------------------+
+.ce
+Fi.5 - Structure of a Player_t packet
+
+.in 12
+.nf
++------------------+-----------------+--------------------+
+|                  |                 |                    |
+|       Size       |       Name      |    Description     |
+|                  |                 |                    |
++------------------+-----------------+--------------------+
+|     4 byte       |      id         |    Id of Entity    |
++------------------+-----------------+--------------------+
+|     4 byte       |      pos_x      | Position of Entity |
++------------------+-----------------+--------------------+
+|     4 byte       |      pos_y      | Position of Entity |
++------------------+-----------------+--------------------+
+|     4 byte       |      dir_x      |  Direction Entity  |
++------------------+-----------------+--------------------+
+|     4 byte       |      dir_y      |  Direction Entity  |
++------------------+-----------------+--------------------+
+|     4 byte       |      speed      |    Speed Entity    |
++------------------+-----------------+--------------------+
+|     byte[255]    |     texture     | Texture path Entity|
++------------------+-----------------+--------------------+
+|     byte[255]    |     roomId      |   Lobby to join    |
++------------------+-----------------+--------------------+
+.ce
+Fi.6 - Structure of a UDPEntity packet
+
+.in 12
+.nf
++------------------+-----------------+--------------------+
+|                  |                 |                    |
+|       Size       |       Name      |    Description     |
+|                  |                 |                    |
++------------------+-----------------+--------------------+
+|     4 byte       |      type       |    Id of Entity    |
++------------------+-----------------+--------------------+
+|     4 byte       |      player1    | Position of Entity |
++------------------+-----------------+--------------------+
+|     4 byte       |      player2    | Position of Entity |
++------------------+-----------------+--------------------+
+|     4 byte       |      player3    |  Direction Entity  |
++------------------+-----------------+--------------------+
+|     4 byte       |      player4    |  Direction Entity  |
++------------------+-----------------+--------------------+
+|     4 byte       |      entity     |    Speed Entity    |
++------------------+-----------------+--------------------+
+|     byte[255]    |     username    | Texture path Entity|
++------------------+-----------------+--------------------+
+|     byte[255]    |     entityId    |   Lobby to join    |
++------------------+-----------------+--------------------+
+|     byte[255]    |     playerList  |   Lobby to join    |
++------------------+-----------------+--------------------+
+.ce
+Fi.7 - Structure of a UDPEntity packet
+
+The fi.5 to fi.7 make up the packets that we are passing through UDP.
+
+.fi
+.in 9
+Commands argument/response
+.fi
+- 0 to SPAWN command make the user spawn takes a username and the users cliaddr.
+    The SPAWN command respond by sedding back all the the user that are in the lobby.
+.fi
+- 1 ENTITY_SPAWN command takes the entity id, the texture path, the positionand the entity movement vector.
+.fi
+- 2 ENTITY_DESTROY  takes the entity id.
+.fi
+- 4 PLAYER_MOVE takes the username, the vector of direction of the client and the positon.
+    The PLAYER_MOVE respond a new position.
+.fi
+- 5 PLAYER_FIRE takes the username.
+    The PLAYER_FIRE respond the position of the sprite, and his direction vector and speed.
+
+.ce
+Copyright (C) The Internet Society (1997).  All Rights Reserved.
+
+.in
+This document and translations of it may be copied and furnished to
+others, and derivative works that comment on or otherwise explain it
+or assist in its implmentation may be prepared, copied, published and
+distributed, in whole or in part, without restriction of any kind,
+provided that the above copyright notice and this paragraph are
+included on all such copies and derivative works.  However, this
+document itself may not be modified in any way, such as by removing
+the copyright notice or references to the Internet Society or other
+Internet organizations, except as needed for the purpose of
+developing Internet standards in which case the procedures for
+copyrights defined in the Internet Standards process must be
+followed, or as required to translate it into languages other than
+English.
+
+The limited permissions granted above are perpetual and will not be
+revoked by the Internet Society or its successors or assigns.
+
+This document and the information contained herein is provided on an
+"AS IS" basis and THE INTERNET SOCIETY AND THE INTERNET ENGINEERING
+TASK FORCE DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING
+BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE INFORMATION
+HEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED WARRANTIES OF
+MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE."
